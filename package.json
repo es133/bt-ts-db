@@ -1,28 +1,48 @@
 {
-  "name": "bt_node_mysql",
-  "version": "2.0.0",
-  "description": "mysql2 wrapper (connection, pool, dao)",
-  "main": "dist/BtMysql.js",
-  "types": "dist/BtMysql.d.ts",
+  "name": "@es133/bt-ts-db",
+  "version": "3.0.0",
+  "description": "DB-neutral (MySQL, PostgreSQL) wrapping library for typescript",
+  "main": "dist/BtDb.js",
+  "types": "dist/BtDb.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build",
-    "test": "mocha"
+    "test": "mocha",
+    "test:integration": "mocha --config test/integration/.mocharc.json"
   },
-  "dependencies": {
-    "mysql2": "^3.11.4"
+  "peerDependencies": {
+    "mysql2": "^3.11.4",
+    "pg": "^8.11.0"
+  },
+  "peerDependenciesMeta": {
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",
     "@types/node": "^18.17.1",
+    "@types/pg": "^8.11.0",
     "mocha": "^10.8.2",
+    "mysql2": "^3.11.4",
+    "pg": "^8.11.0",
     "ts-node": "^10.4.0",
     "typescript": "^5.6.3"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/es133/bt-ts-mysql"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "keywords": [],
   "author": "bugshot@gmail.com",
-  "private": true
+  "license": "MIT"
 }
