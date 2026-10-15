@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: bt_test
+      MYSQL_DATABASE: bt_test
+      MYSQL_USER: bt_test
+      MYSQL_PASSWORD: bt_test
+    ports:
+      - "13306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ubt_test", "-pbt_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: bt_test
+      POSTGRES_PASSWORD: bt_test
+      POSTGRES_DB: bt_test
+    ports:
+      - "15432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "bt_test", "-d", "bt_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
