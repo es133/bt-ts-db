@@ -1,17 +1,17 @@
 export interface BtMysqlData {
-    toString():string;
+    toString(): string;
 }
 
 export interface BtMysqlDataConstructor {
-    new(row?:any, fields?:any):BtMysqlData;
+    new(row?: any, fields?: any): BtMysqlData;
 }
 
 export type BtMysqlModifyResult = {
-    fieldCount: number | 0,
-    affectedRows: number | 0,
-    insertId: number | 0,
-    info: string | null;
-    serverStatus: number | 0,
-    warningStatus: number | 0,
-    changedRows: number | 0
+    fieldCount: number,
+    affectedRows: number,
+    insertId: number,
+    info: string | null,
+    serverStatus: number,
+    warningStatus: number,
+    changedRows: number
 }

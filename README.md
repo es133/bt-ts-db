@@ -1,118 +1,30 @@
-# bt-ts-mysql
-- A node-mysql2(https://github.com/sidorares/node-mysql2) wrapping library for typescript
+# bt_node_mysql
 
-### Installation
+mysql2 기반 MySQL 래퍼 (TypeScript).
 
-   - Create .npmrc in project root directory
-   ```
-    @es133:registry=https://npm.pkg.github.com/
-    //npm.pkg.github.com/:_authToken={YOUR GITHUB PAT(Personal Access Token)}
-   ```
-   - Add dependancy item In package.json file, add this
-   ```
-   "dependencies": {
-       ...
-       "@es133/bt-ts-mysql": "1.0.0"
-       ...
-   },
-   ```
-### How to Use 
+## 빌드
 
-#### In case using Nestjs
+```
+npm install
+npm run build
+```
 
-1. Add configuration
-   - mysql.config.ts
-    ```typescript
-    import { registerAs } from '@nestjs/config';
+## 사용
 
-    export default registerAs('mysql', () => ({
-        db_config: {
-            host: 'localhost',
-            user: 'user',
-            port: 3306,
-            password: 'password',
-            charset: 'utf8mb4',
-            connectionLimit: 20,
-            database: 'db_name',
-            timezone: 'Z',
-        },
-    }));
-    ```
-    - Add mysql configuration to app.module.ts file
-    ```typescript
-    @Module({
-        imports: [
-            ConfigModule.forRoot({
-                envFilePath:...,
-                isGlobal: true,
-                load: [Config, MysqlConfig],
-            }),
-        ],
-        controllers: [AppController],
-        providers: [AppService],
-    })
-    export class AppModule {}
+```ts
+import { BtMysql, BtMysqlConfig, BtMysqlAbstractDao } from 'bt_node_mysql';
 
-    ```
+const config = new BtMysqlConfig({ host, user, password, database, connectionLimit: 20 });
+const pool = await BtMysql.buildConnectionPool(config);
+const dao = new BtMysqlAbstractDao(pool);
+const rows = await dao.execute('SELECT * FROM t WHERE id = ?', [1]);
+await pool.disconnectPool();
+```
 
-2. Create providers
-   ```typescript
-   import { Inject, Injectable } from '@nestjs/common';
-   import { BtMysql } from 'bt-ts-mysql';
-   import { BtMysqlConnectionPool } from 'bt-ts-mysql';
-   import { MysqlReadConfig } from '../../config/mysql/MysqlReadConfig';
+## 테스트 (실제 DB 필요)
 
-   @Injectable()
-   export class MysqlReadClientService {
-      public readClient: TbMysqlConnectionPool | null;
-      constructor(@Inject(MysqlReadConfig) private readonly readConfig: MysqlReadConfig) {
-         BtMysql.buildConnectionPool(readConfig.configuration, true)
-            .then((connection) => {
-                this.readClient = connection;
-         })
-         .catch((exception) => {
-            console.error(exception);
-            throw exception;
-         });
-      }
-   }
+환경변수 `DB_HOST`, `DB_USER`, `DB_PASSWD`, `DB_NAME` 설정 후:
 
-    ```
-3. Create abstract dao 
-   ```typescript
-   import { Inject, Injectable } from '@nestjs/common';
-   import { MysqlReadClientService } from '../../providers/mysql/MysqlReadClientService';
-   import { BtMysqlAbstractDao } from 'bt-ts-mysql';
-
-   @Injectable()
-   export abstract class AbstractDbModel {
-      protected readDao: BtMysqlAbstractDao;
-
-      protected constructor(
-        @Inject(MysqlReadClientService) protected readonly readClient: MysqlReadClientService
-      ) {
-        this.readDao = new BtMysqlAbstractDao(readClient.readClient);
-      }
-   }
-   ```
-
-4. Using dao 
-   ```typescript
-   @Injectable()
-   export class MemberDbModel extends AbstractDbModel {
-      constructor(
-        @Inject(MysqlReadClientService) protected readonly readClient: MysqlReadClientService,
-        @Inject(MysqlWriteClientService) protected readonly writeClient: MysqlWriteClientService,
-      ) {
-            super(readClient, writeClient); 
-        }
-
-        public async getMemberByMemberId(memberId: number): Promise<MemberDbData> {
-            const query = 'SELECT * FROM member WHERE id = ?';
-            const result = <MemberDbData>await this.readDao.fetchSingle(MemberDbData, query, [memberId]);
-            return result;
-        }
-      ...
-   }
-   ```
-
+```
+cd test && ./test.sh connection_pool.ts
+```

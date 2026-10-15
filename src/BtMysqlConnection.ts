@@ -1,56 +1,26 @@
 'use strict';
 
-import {Connection, ConnectionOptions, QueryError} from 'mysql2/promise'
+import { Connection, ConnectionOptions } from 'mysql2/promise';
 
 export class BtMysqlConnection {
 
-    protected connection?: Connection ;
+    protected connection?: Connection;
 
     constructor (connection: Connection) {
         if (!connection) {
             console.error('Invalid parameters');
             return;
         }
-
         this.connection = connection;
-        //console.log('CONNECTION:', this[_connection]);
     }
 
-    getConnection():Connection | null {
-        try {
-            if (this.connection) {
-                return this.connection;
-            } else {
-                return null;
-            }
-        } catch (exception) {
-            throw exception;
-        }
+    getConnection(): Connection | null {
+        return this.connection ?? null;
     }
 
-    async disconnectGraceful():Promise<void> {
-        return new Promise((resolve, reject) =>  {
-            if (this.connection) {
-                this.connection.end((error: QueryError | null) => {
-                    if (error) {
-                        console.error('BtMysql Error:', error);
-                        reject(error);
-                    } else {
-                        resolve();
-                    }
-                });
-            } else {
-                resolve();
-            }
-        });
-    }
-
-    async execute(query: string, value: any): Promise<any>{
-
+    async disconnectGraceful(): Promise<void> {
         if (this.connection) {
-            const [rows, fields] = await this.connection.execute(query, value);
-            this.connection.unprepare(query);
-            return [rows, fields];
+            await this.connection.end();
         }
     }
 
@@ -60,24 +30,46 @@ export class BtMysqlConnection {
         }
     }
 
-    connectionOption(): ConnectionOptions | null  {
-        if (this.connection) {
-            return this.connection.config;
-        } else {
-            return null;
+    async execute(query: string, value: any): Promise<any> {
+        try {
+            if (this.connection) {
+                const [rows, fields] = await this.connection.execute(query, value);
+                return [rows, fields];
+            }
+        } catch (exception) {
+            this.connection?.unprepare(query);
+            throw exception;
         }
     }
 
-    enableNamePlaceHolder():void {
+    async executeOnce(query: string, value: any): Promise<any> {
+        if (this.connection) {
+            const [rows, fields] = await this.connection.execute(query, value);
+            this.connection.unprepare(query);
+            return [rows, fields];
+        }
+    }
+
+    async query(query: string, value: any): Promise<any> {
+        if (this.connection) {
+            const [rows, fields] = await this.connection.query(query, value);
+            return [rows, fields];
+        }
+    }
+
+    connectionOption(): ConnectionOptions | null {
+        return this.connection ? this.connection.config : null;
+    }
+
+    enableNamePlaceHolder(): void {
         if (this.connection) {
             this.connection.config.namedPlaceholders = true;
         }
     }
 
-    disableNamePlaceHolder():void {
+    disableNamePlaceHolder(): void {
         if (this.connection) {
             this.connection.config.namedPlaceholders = false;
         }
     }
-
 }

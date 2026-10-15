@@ -103,3 +103,8 @@ typings/
 .tern-port
 
 .idea
+# Build output
+dist/
+
+# macOS
+.DS_Store
