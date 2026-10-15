@@ -4,6 +4,8 @@ import { BtDbConfig } from '../../src/BtDbConfig';
 import {
     PgClientExecutor,
     PgPoolExecutor,
+    createPgClient,
+    createPgPool,
     normalizePgResult,
     pgClientConfig,
     pgPoolConfig,
@@ -74,6 +76,27 @@ describe('pg driver', () => {
             await executor.close();
             assert.strictEqual(ended, true);
             assert.strictEqual(executor.getNative(), fake);
+        });
+    });
+    describe('error listeners', () => {
+        // pg emits 'error' on idle pool clients and dropped connections;
+        // without a listener Node's EventEmitter throws and the process exits.
+        const config = new BtDbConfig({ client: 'pg', host: '127.0.0.1' });
+
+        it('attaches an error listener to the pool', async () => {
+            const pool = createPgPool(config);
+            try {
+                assert.ok(pool.listenerCount('error') > 0);
+                assert.doesNotThrow(() => pool.emit('error', new Error('idle client lost')));
+            } finally {
+                await pool.end();
+            }
+        });
+
+        it('attaches an error listener to the single client', () => {
+            const client = createPgClient(config);
+            assert.ok(client.listenerCount('error') > 0);
+            assert.doesNotThrow(() => client.emit('error', new Error('connection lost')));
         });
     });
 });

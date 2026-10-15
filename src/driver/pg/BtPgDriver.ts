@@ -68,14 +68,28 @@ export class PgPoolExecutor implements BtDbExecutor {
     }
 }
 
+// pg emits 'error' on dropped connections and idle pool clients; an unhandled
+// 'error' event would crash the process, so log it like mysql2 does internally.
+export function createPgClient(config: BtDbConfig): Client {
+    const client = new Client(pgClientConfig(config));
+    client.on('error', (err) => console.error('DB Connection Error', err));
+    return client;
+}
+
+export function createPgPool(config: BtDbConfig): Pool {
+    const pool = new Pool(pgPoolConfig(config));
+    pool.on('error', (err) => console.error('DB Pool Error', err));
+    return pool;
+}
+
 export const pgDriver = {
     async connect(config: BtDbConfig): Promise<BtDbExecutor> {
-        const client = new Client(pgClientConfig(config));
+        const client = createPgClient(config);
         await client.connect();
         return new PgClientExecutor(client);
     },
 
     async createPool(config: BtDbConfig): Promise<BtDbExecutor> {
-        return new PgPoolExecutor(new Pool(pgPoolConfig(config)));
+        return new PgPoolExecutor(createPgPool(config));
     },
 };

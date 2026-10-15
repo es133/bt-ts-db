@@ -84,6 +84,8 @@ const newId = result?.rows[0].id;
 
 `getNative()` returns the underlying mysql2 / pg connection or pool.
 
+Connection errors emitted by the driver outside a query (e.g. a dropped idle pg connection) are logged with `console.error` so they do not crash the process. Attach your own listener via `getNative()` if you need different handling.
+
 #### In case using NestJS
 
 ```typescript
